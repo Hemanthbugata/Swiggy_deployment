@@ -192,16 +192,18 @@ Install plugins :
 
 Step 4:
 
+  Goto Manage Jenkins → Tools → Install JDK (17) and NodeJs (16). Click on Apply and Save
+
   configuration of java and nodejs (Manage jenkins --> Tools)
 
-     ![image](https://github.com/user-attachments/assets/1a07bfba-d350-4186-b5f9-06403ceac4cc)
-
-     ![image](https://github.com/user-attachments/assets/5835aa81-db6b-488a-8eba-d28ca552f5b5)
 
 5. Configure Sonar Server in Manage Jenkins ⚙️
+
 Grab the public IP address of your EC2 instance.
 
-Sonarqube works on Port 9000, so <Public IP>:9000.
+    public IP>:9000.
+
+Sonarqube works on Port 9000, 
 
 Go to your Sonarqube server.
 
@@ -276,7 +278,7 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/Hemanthbugata/Swiggydeploy.git'
+                git branch: 'main', url: 'https://github.com/Hemanthbugata/Swiggy_deployment.git'
             }
         }
         stage("Sonarqube Analysis ") {
@@ -413,7 +415,9 @@ Command to Create EKS Cluster using eksctl command:
 
 eksctl create cluster --name <name-of-cluster> --nodegroup-name <nodegrpname> --node-type <instance-type> --nodes <no-of-nodes>
 
-eksctl create cluster --name my-eks-cluster --nodegroup-name ng-test --node-type t3.medium --nodes 2
+```
+eksctl create cluster --name swiggy-eks-cluster --nodegroup-name ng-test --node-type t3.medium --nodes 2
+```
 
 It will take 5–10 minutes to create a cluster.
 
@@ -478,7 +482,7 @@ The GitHub URL is the Kubernetes Manifest files which I have stored and the push
 
 Repo Link: 
 
-
+https://github.com/Hemanthbugata/Swiggy_deployment.git
 
 You should see the below, once you’re done with the details.
 
@@ -491,7 +495,9 @@ You can see the pods running in the EKS Cluster.
 
 We can see the out-of-pods using the load balancer URL:
 
+ ```
 kubectl get svc
+```
 
 With the above load balancer, you will be able to see the output as shown in the below image:
 
@@ -505,5 +511,8 @@ I will click on the sync option which is in the ArgoCD and then the updates will
 
 
 
+![argo cd deployment](https://github.com/user-attachments/assets/2b86627a-1b17-4483-8965-4a3268c24bcc)
 
+
+![address change swiggy](https://github.com/user-attachments/assets/9ea49cc5-c417-460d-b806-0e04805f82c4)
 
