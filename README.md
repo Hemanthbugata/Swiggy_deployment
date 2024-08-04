@@ -198,8 +198,312 @@ Step 4:
 
      ![image](https://github.com/user-attachments/assets/5835aa81-db6b-488a-8eba-d28ca552f5b5)
 
-Step 5 :
+5. Configure Sonar Server in Manage Jenkins ⚙️
+Grab the public IP address of your EC2 instance.
 
-    Sonarqube 
+Sonarqube works on Port 9000, so <Public IP>:9000.
+
+Go to your Sonarqube server.
+
+Click on Administration → Security → Users → Click on Tokens and Update Token, → Give it a name, and click on Generate Token
+
+
+click on update Token
+
+
+Create a token with a name and generate
+
+
+
+copy Token
+
+Goto Jenkins Dashboard → Manage Jenkins → Credentials → Add secret text. It should look like this
+
+
+
+You will see this page once you click on create
+
+
+Now, go to Dashboard → Manage Jenkins → System and add like the below image.
+
+
+Click on Apply and Save.
+
+The Configure System option is used in Jenkins to configure different server
+
+Global Tool Configuration is used to configure different tools that we install using Plugins
+
+We will install a sonar scanner in the tools.
+
+
+In the Sonarqube Dashboard, add a quality gate as well.
+
+In the sonar interface, create the quality gate as shown below:
+
+Click on the quality gate, then create.
+
+
+
+Click on the save option.
+
+In the Sonarqube Dashboard, Create Webhook option as shown in below:
+
+Administration → Configuration →Webhooks
+
+
+Click on Create
+
+
+Add details:
+
+<http://jenkins-private-ip:8080>/sonarqube-webhook/
+Let’s go to our pipeline and add the script to our pipeline script.
+```
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        nodejs 'node16'
+    }
+    environment {
+        SCANNER_HOME=tool 'sonar-scanner'
+    }
+    stages {
+        stage('clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Hemanthbugata/Swiggydeploy.git'
+            }
+        }
+        stage("Sonarqube Analysis ") {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Swiggy-CICD \
+                    -Dsonar.projectKey=Swiggy-CICD '''
+                }
+            }
+        }
+        stage("quality gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                }
+            } 
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
+    }
+}
+
+```
+Click on Build now, and you will see the stage view like this:
+
+
+To see the report, you can go to Sonarqube Server and go to Projects.
+
+
+You can see the report has been generated, and the status shows as passed. You can see that there are 765 lines it has scanned. To see a detailed report, you can go to issues.
+
+
+6. Install OWASP Dependency Check Plugins 🧐
+Go to Dashboard → Manage Jenkins → Plugins → OWASP Dependency-Check. Click on it and install it without restarting.
+
+
+First, we configured the plugin, and next, we had to configure the Tool
+
+Goto Dashboard → Manage Jenkins → Tools →
+
+
+Click on Apply and save here.
+
+Now go to Configure → Pipeline and add this stage to your pipeline and build.
+```
+stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('TRIVY FS SCAN') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+```
+You will see that in status, a graph will also be generated for vulnerabilities.
+
+
+7. Docker Image Build and Push 🐳
+We need to install the Docker tool on our system.
+
+Go to Dashboard → Manage Plugins → Available plugins → Search for Docker and install these plugins.
+
+
+Now, goto Dashboard → Manage Jenkins → Tools →
+
+
+Now go to the Dockerhub repository to generate a token and integrate with Jenkins to push the image to the specific repository.
+
+
+If you observe, there is no repository related to Swiggy.
+
+There is an icon with the first letter of your name.
+
+Click on that My Account, → Settings → Create a new token and copy the token.
+
+
+
+
+
+Goto Jenkins Dashboard → Manage Jenkins → Credentials → Add secret text. It should look like this:
+
+
+Add this stage to Pipeline Script.
+```
+stage("Docker Build & Push"){
+            steps{
+                script{
+                   withDockerRegistry(credentialsId: 'dockerhub', toolName: 'docker'){ 
+                    app.push("${env.BUILD_NUMBER}")  
+                       sh "docker build -t swiggy-app ."
+                       sh "docker tag swiggy-app hemanth0102/swiggy-app:latest "
+                       sh "docker push hemanth0102/swiggy-app:latest "
+                    }
+                }
+            }
+        }
+        stage("TRIVY"){
+            steps{
+                sh "trivy image hemanth0102/swiggy-app:latest > trivyimage.txt" 
+            }
+        }
+```
+You will be able to view the output in the Jenkins pipeline and output upon successful execution.
+
+
+
+
+
+When you log in to Dockerhub, you will see a new image is created.
+
+
+
+8. Creation of EKS Cluster with ArgoCD 🌐
+EKSCTL Installation:
+
+Now let’s install EKSCTL in Ubuntu EC2 which was created earlier.
+```
+ARCH=amd64
+PLATFORM=$(uname -s)_$ARCH
+curl -sLO "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+sudo mv /tmp/eksctl /usr/local/bin
+```
+# Check the eksctl version.
+eksctl version
+
+Command to Create EKS Cluster using eksctl command:
+
+eksctl create cluster --name <name-of-cluster> --nodegroup-name <nodegrpname> --node-type <instance-type> --nodes <no-of-nodes>
+
+eksctl create cluster --name my-eks-cluster --nodegroup-name ng-test --node-type t3.medium --nodes 2
+
+It will take 5–10 minutes to create a cluster.
+
+
+As you will see in the EC2 instances running list one instance is running in the name of EKS Cluster as shown below.
+
+
+EKS Cluster is up and ready and check with the below command.
+
+```
+Now let’s install ArgoCD in the EKS Cluster.
+
+kubectl create ns Argocd
+# This will create a new namespace, argocd, where Argo CD services and application resources will live.
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+Download Argo CD CLI:
+```
+curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
+```
+Access The Argo CD API Server:
+
+# By default, the Argo CD API server is not exposed with an external IP. To access the API server, 
+choose one of the following techniques to expose the Argo CD API server:
+* Service Type Load Balancer
+* Port Forwarding
+Let’s go with Service Type Load Balancer.
+
+```
+# Change the argocd-server service type to LoadBalancer.
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+```
+List the resources in the namespace:
+
+kubectl get all -n argocd
+
+Get the load balancer URL:
+
+kubectl get svc -n argocd
+```
+
+Pickup the URL and paste it into the web to get the UI as shown below image:
+
+
+Login Using The CLI:
+
+argocd admin initial-password -n argocd
+
+Login with the admin and Password in the above you will get an interface as shown below:
+
+
+Click on New App:
+
+
+Enter the Repository URL, set path to ./, Cluster URL to kubernetes.default.svc, the namespace to default and click save.
+
+The GitHub URL is the Kubernetes Manifest files which I have stored and the pushed image is used in the Kubernetes deployment files.
+
+Repo Link: 
+
+
+
+You should see the below, once you’re done with the details.
+
+
+Click on it.
+
+
+You can see the pods running in the EKS Cluster.
+
+
+We can see the out-of-pods using the load balancer URL:
+
+kubectl get svc
+
+With the above load balancer, you will be able to see the output as shown in the below image:
+
+
+As you observe in the above image, I just want to change the address of the Swiggy Application.
+
+Then the real magic will happen, the changes updated in the code we will try to push the code to GitHub and run a pipeline to push the image to the repository with the updated details.
+
+
+I will click on the sync option which is in the ArgoCD and then the updates will be in our Swiggy Website.
+
+
+
 
 
