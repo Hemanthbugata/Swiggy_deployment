@@ -1,8 +1,12 @@
-# Project Title 
+<h2> Project Title</h2>
 <h2>Securing Swiggy Clone App Deployment on AWS: Building a Robust DevSecOps Pipeline with Terraform, Jenkins, SonarQube, Trivy, ArgoCD, and EKS</h2>
 
-# Project Description 
+<h2>Project Description</h2>
 <h2>This project aims to create a secure and scalable deployment pipeline for a Swiggy Clone application on AWS, leveraging the power of modern DevSecOps tools and practices. The pipeline integrates Terraform, Jenkins, SonarQube, Trivy, ArgoCD, and Amazon EKS to ensure continuous integration, continuous deployment, and robust security throughout the development lifecycle.</h2>
+
+<h2>Project Architecture</h2>
+
+![_Minimalist Elegant Flowchart Brainstorm Project Mind Map (2)](https://github.com/user-attachments/assets/f5113742-6ae1-4807-a61a-38775eaac535)
 
 <h3>Key Components:</h3>
 
