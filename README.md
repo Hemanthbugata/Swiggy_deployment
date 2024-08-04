@@ -194,9 +194,9 @@ Step 4:
 
   configuration of java and nodejs (Manage jenkins --> Tools)
 
-     1)![image](https://github.com/user-attachments/assets/1a07bfba-d350-4186-b5f9-06403ceac4cc)
+     ![image](https://github.com/user-attachments/assets/1a07bfba-d350-4186-b5f9-06403ceac4cc)
 
-     2) ![image](https://github.com/user-attachments/assets/5835aa81-db6b-488a-8eba-d28ca552f5b5)
+     ![image](https://github.com/user-attachments/assets/5835aa81-db6b-488a-8eba-d28ca552f5b5)
 
 Step 5 :
 
