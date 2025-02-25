@@ -49,16 +49,23 @@ pipeline {
                 sh "trivy fs . > trivyfs.txt"
             }
         }
-        stage("Docker Build & Push") {
-            steps {
-                withDockerRegistry(credentialsId: 'docker', url: 'https://index.docker.io') {
-                    sh 'docker login -u hemanth0102 -p (password)'
-                    sh "docker build -t swiggy-app ."
-                    sh "docker tag swiggy-app hemanth0102/swiggy-app:latest"
-                    sh "docker push hemanth0102/swiggy-app:latest"
+        stage('Docker Build & Push') {
+                steps {
+                    withDockerRegistry(credentialsId: 'docker', url: 'https://index.docker.io') {
+                        sh '''
+                            echo "Building Docker Image..."
+                            docker build -t springboot-backend .
+            
+                            echo "Tagging Docker Image..."
+                            docker tag springboot-backend hemanth0102/springboot-backend:latest
+            
+                            echo "Pushing Docker Image..."
+                            docker push hemanth0102/springboot-backend:latest
+                        '''
                 }
             }
         }
+
         stage("TRIVY") {
             steps {
                 sh "trivy image hemanth0102/swiggy-app:latest > trivyimage.txt"
