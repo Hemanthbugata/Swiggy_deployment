@@ -54,13 +54,13 @@ pipeline {
                     withDockerRegistry(credentialsId: 'docker', url: 'https://index.docker.io') {
                         sh '''
                             echo "Building Docker Image..."
-                            docker build -t springboot-backend .
+                            docker build -t swggiyimage .
             
                             echo "Tagging Docker Image..."
-                            docker tag springboot-backend hemanth0102/springboot-backend:latest
+                            docker tag springboot-backend hemanth0102/swiggyimagelatest
             
                             echo "Pushing Docker Image..."
-                            docker push hemanth0102/springboot-backend:latest
+                            docker push hemanth0102/swiggyimage:latest
                         '''
                 }
             }
